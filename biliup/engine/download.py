@@ -49,7 +49,8 @@ class DownloadBase:
 
     def download(self, filename):
         if self.downloader == 'stream-gears':
-            stream_gears_download(self.raw_stream_url, self.fake_headers, f'{self.fname}%{self.room_title}', config.get('segment_time'), config.get('file_size'))
+            stream_gears_download(self.raw_stream_url, self.fake_headers, self.fname+' '+self.room_title,
+                                  config.get('segment_time'), config.get('file_size'))
         else:
             self.ffmpeg_download(filename)
 
@@ -125,7 +126,7 @@ class DownloadBase:
 
     @property
     def file_name(self):
-        return f'{self.fname}%{self.room_title}'
+        return f'{self.fname} {self.room_title}'
 
     def close(self):
         pass
