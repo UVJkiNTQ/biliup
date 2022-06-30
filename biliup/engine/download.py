@@ -126,7 +126,7 @@ class DownloadBase:
 
     @property
     def file_name(self):
-        return f'{self.fname} {self.room_title}'
+        return f'{self.fname} {time.strftime("%Y-%m-%dT%H_%M_%S", time.localtime())} {self.room_title}'
 
     def close(self):
         pass
