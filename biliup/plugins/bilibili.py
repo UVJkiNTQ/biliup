@@ -20,6 +20,7 @@ class Bilibili(DownloadBase):
             logger.debug(room_info['message'])
             return False
         if room_info['data']['room_info']['live_status'] != 1:
+            logger.debug(room_info)
             return False
         self.room_title = room_info['data']['room_info']['title']
         biliplatform = config.get('biliplatform') if config.get('biliplatform') else 'web'
