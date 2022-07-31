@@ -8,6 +8,9 @@ from .timer import Timer
 
 logger = logging.getLogger('biliup')
 
+global global_reloader
+global program_args
+
 
 def has_extension(fname_list, *extension):
     for fname in fname_list:
@@ -22,6 +25,7 @@ class AutoReload(Timer):
         super().__init__(interval)
         self.watched = watched
         self.mtimes = {}
+        self.triggered = False
 
     @staticmethod
     def _iter_module_files():
@@ -64,7 +68,7 @@ class AutoReload(Timer):
         """Check file state ervry interval. If any change is detected, exit this
         process with a special code, so that deamon will to restart a new process.
         """
-        if not self._is_any_file_changed():
+        if not self._is_any_file_changed() and not self.triggered:
             return
         while True:
             await asyncio.sleep(self.interval)
@@ -82,6 +86,30 @@ class AutoReload(Timer):
                 #     args = ["python", path]
                 # else:
                 #     args = [path, 'start']
-                args = ['biliup', 'start']
-                subprocess.Popen(args)
+                if not is_docker():
+                    args = unparser_args(program_args)
+                    subprocess.Popen(args)
                 return logger.info('重启')
+
+
+def unparser_args(args):
+    s = ['biliup', 'start']
+    for i, j in args.items():
+        if i == 'start':
+            continue
+        elif type(j) == str or type(j) == int:
+            s.append(f'--{i}={j}')
+        elif type(j) == bool:
+            s.append(f'--{i}')
+    return s
+
+
+import os
+
+
+def is_docker():
+    path = '/proc/self/cgroup'
+    return (
+            os.path.exists('/.dockerenv') or
+            os.path.isfile(path) and any('docker' in line for line in open(path))
+    )

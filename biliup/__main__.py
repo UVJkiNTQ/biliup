@@ -4,10 +4,12 @@ import argparse
 import asyncio
 import logging.config
 import platform
+import stream_gears
 
 from . import __version__, LOG_CONF
 from .common.Daemon import Daemon
 from .common.reload import AutoReload
+import biliup.common.reload
 from .common.timer import Timer
 from biliup.config import config
 from .engine.event import Event
@@ -35,6 +37,7 @@ def arg_parser():
     parser_restart.set_defaults(func=daemon.restart)
     parser.set_defaults(func=lambda: asyncio.run(main(args)))
     args = parser.parse_args()
+    biliup.common.reload.program_args = args.__dict__
     if args.http:
         config.create_without_config_input(args.config)
     else:
@@ -68,6 +71,7 @@ async def main(args):
         import biliup.web
         runner, site = await biliup.web.service(args, event_manager)
         detector = AutoReload(event_manager, timer, runner.cleanup, interval=interval)
+        biliup.common.reload.global_reloader = detector
         await asyncio.gather(detector.astart(), timer.astart(), site.start(), return_exceptions=True)
     else:
         # 模块更新自动重启
