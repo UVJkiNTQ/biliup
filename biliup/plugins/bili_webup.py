@@ -145,11 +145,11 @@ class BiliBili:
         if os.path.isfile(persistence_path):
             print('使用持久化内容上传')
             self.load()
-        if not self.cookies and user.get('cookies'):
+        if user.get('cookies'):
             self.cookies = user['cookies']
-        if not self.access_token and user.get('access_token'):
+        if user.get('access_token'):
             self.access_token = user['access_token']
-        if not self.account and user.get('account'):
+        if user.get('account'):
             self.account = user['account']
         if self.cookies:
             try:
@@ -541,8 +541,6 @@ class BiliBili:
     def submit(self, submit_api=None):
         if not self.video.title:
             self.video.title = self.video.videos[0]["title"]
-        for v in self.video.videos:
-            v["title"] = ""
         self.__session.get('https://member.bilibili.com/x/geetest/pre/add', timeout=5)
 
         if submit_api is None:
