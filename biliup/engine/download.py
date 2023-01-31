@@ -1,5 +1,6 @@
 import logging
 import os
+import re
 import subprocess
 import sys
 import time
@@ -16,7 +17,8 @@ class DownloadBase:
     def __init__(self, fname, url, suffix=None, opt_args=None):
         self.room_title = None
         if opt_args is None:
-            opt_args = []
+            opt_args = [] 
+        #主播单独传参覆盖全局设置。例如新增了一个全局的filename_prefix参数，在下面添加self.filename_prefix = config.get('filename_prefix'),即可通过self.filename_prefix在下载或者上传时候传递主播单独的设置参数用于调用（如果该主播有设置单独参数，将会优先使用单独参数；如无，则会优先你用全局参数。）
         self.fname = fname
         self.url = url
         self.suffix = suffix
@@ -25,6 +27,8 @@ class DownloadBase:
         # ffmpeg.exe -i  http://vfile1.grtn.cn/2018/1542/0254/3368/154202543368.ssm/154202543368.m3u8
         # -c copy -bsf:a aac_adtstoasc -movflags +faststart output.mp4
         self.raw_stream_url = None
+        self.filename_prefix= config.get('filename_prefix')
+        self.time_prefix= config.get('time_prefix')
         self.opt_args = opt_args
         self.fake_headers = {
             'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
@@ -48,6 +52,9 @@ class DownloadBase:
         raise NotImplementedError()
 
     def download(self, filename):
+        if self.filename_prefix: #判断是否存在自定义录播命名设置
+                filename = self.filename_prefix.format(streamer = self.fname, nowtime = time.strftime(f"{self.time_prefix if self.time_prefix else config.get('time_prefix', '%Y-%m-%d %H_%M_%S')}"), room_title = self.room_title)
+        filename = get_valid_filename(filename)
         if self.downloader == 'stream-gears':
             stream_gears_download(self.raw_stream_url, self.fake_headers, f'{self.fname} %Y-%m-%dT%H_%M_%S {self.room_title}',
                                   config.get('segment_time'), config.get('file_size'))
@@ -157,3 +164,20 @@ def stream_gears_download(url, headers, file_name, segment_time=None, file_size=
         file_name,
         segment
     )
+
+
+def get_valid_filename(name):
+    """
+    Return the given string converted to a string that can be used for a clean
+    filename. Remove leading and trailing spaces; convert other spaces to
+    underscores; and remove anything that is not an alphanumeric, dash,
+    underscore, or dot.
+    # >>> get_valid_filename("john's portrait in 2004.jpg")
+    >>> get_valid_filename("{self.fname}%Y-%m-%dT%H_%M_%S")
+    '{self.fname}%Y-%m-%dT%H_%M_%S'
+    """
+    s = str(name).strip().replace(" ", "_")
+    s = re.sub(r"(?u)[^-\w.%{}\[\]【】「」-]", "", s)
+    if s in {"", ".", ".."}:
+        raise RuntimeError("Could not derive file name from '%s'" % name)
+    return s

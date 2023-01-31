@@ -22,7 +22,7 @@ streamers:
             - https://www.twitch.tv/innovation_s2
             - https://www.panda.tv/1160340
         title: "{title}第一视角%Y-%m-%d" # 自定义标题的时间格式, {title}代表直播间标题
-        tid: 171 # 投稿分区码,171为电子竞技分区 
+        tid: 171 # 投稿分区码,171为电子竞技分区
         copyright: 2 # 1为自制
         cover_path: /cover/up.jpg
         description: |- # 支持strftime, {title}占位符。 希望你可以保留软件出处
@@ -34,6 +34,10 @@ streamers:
         dtime: 14400 # 设置延时发布时间，距离提交大于2小时，格式为时间戳
         # 覆盖全局默认上传插件，Noop为不上传，但会执行后处理
         uploader: biliup-rs
+        # 覆盖全局自定义录播文件命名规则 详细用法参考全局版本介绍
+        #filename_prefix: '[{streamer}][{nowtime}][{room_title}]'
+        # 覆盖全局自定义录播文件命名中时间的格式 详细用法参考全局版本介绍
+        #time_prefix: '%Y-%m-%d %H_%M_%S'
         # 使用指定的账号上传
         user_cookie: cookies.json
         postprocessor: # 上传完成后，将按自定义顺序执行自定义操作
@@ -49,15 +53,30 @@ streamers:
         opt_args: # ffmpeg参数
             - '-ss' # 跳过开始的16秒
             - '00:00:16'
-
+            
+# 自定义录播文件命名规则
+# 可使用参数 {streamer}:你在配置里设置的直播间名 {nowtime}:创建文件的时间，可以通过time_prefix修改格式 {room_title}:当场直播间标题
+# 如果上传文件，文件名必须包含设定的模板名。其次，如果没有定义时间，文件分片可能会互相覆盖，所以推荐设置{nowtime}来避免分段文件名重复。
+#filename_prefix: '[{streamer}][{nowtime}][{room_title}]'
+# 自定义录播文件命名中时间的格式
+#time_prefix: '%Y-%m-%d %H_%M_%S'
 # 如遇到斗鱼录制卡顿可以尝试切换线路，tct-h5（备用线路5），ali-h5（备用线路6），akm-h5（主线路1）
 #douyucdn: tct-h5
-# 如遇到虎牙录制卡顿可以尝试切换线路，AL（阿里），BD（百度），TX（腾讯）
+# 如遇到虎牙录制卡顿可以尝试切换线路，AL, HW, TX, WS
 #huyacdn: AL
-# 如遇到哔哩哔哩录制跳帧可以尝试修改platform值，web（flv），h5（m3u8）
-#biliplatform: web
+# 哔哩哔哩直播流协议.可选 stream（Flv）、hls
+#bili_protocol: stream
+# 哔哩哔哩直播优选CDN
+#bili_perfCDN: cn-gotcha01
+# 哔哩哔哩直播强制原画（仅限HLS流的 cn-gotcha01 CDN）
+#bili_forceScoure: False
+# 自定义哔哩哔哩直播api
+#bili_liveapi: 'https://api.live.bilibili.com'
 # 如需要录制抖音请在此填入cookie需要__ac_nonce与__ac_signature的值
 #douyin_cookie: '__ac_nonce=123456; __ac_signature=123456;'
+# 如录制Twitch时遇见视频流中广告过多的情况，可尝试在此填入cookie，可以大幅减少视频流中的twitch广告（经测试需要在该Cookie所属账号开了TwitchTurbo会员才有用），该cookie有过期风险，cookie过期后会导致无法获取到直播流
+# twitch_cookie获取方式：在浏览器中打开Twitch.tv，F12调出控制台，在控制台中执行：document.cookie.split("; ").find(item=>item.startsWith("auth-token="))?.split("=")[1]
+#twitch_cookie: 'aisjdoiuasdoihansdoh3ooi209'
 # Netscape 格式的 Cookies 文本路径
 #youtube_cookie: 'cookiejar.txt'
 # b站提交接口，默认自动选择，可选web，client
